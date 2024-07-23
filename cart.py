@@ -1,3 +1,4 @@
+import random
 import time
 import cv2
 import numpy as np
@@ -18,6 +19,7 @@ class kasinaCart:
         return url.split("product-detail/")[-1].split("?")[0]
 
     def login(self, data):
+
         header = {
             'Accept': 'application/json, text/plain, */*',
             'Accept-Encoding': 'gzip, deflate, br',
@@ -26,7 +28,7 @@ class kasinaCart:
             'Origin': 'https://www.kasina.co.kr',
             'Referer': 'https://www.kasina.co.kr',
             'Sec-Fetch-Dest': 'empty',
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebkit/605.1.15 (KHTML, like Gecko)  Mobile/15E148 Kasina/2.0.6',
+            'User-Agent': '',
             'Device-uuid': ''
         }
         data = {
@@ -61,8 +63,14 @@ class kasinaCart:
         option = ""
         for i in req.json()["multiLevelOptions"]:
             if str(i["value"])==str(data["size"]):
-                option = str(i["optionNo"])
-                break
+                if i["stockCnt"] != 0:
+                    option = str(i["optionNo"])
+                    break
+        if option == "":
+            for i in req.json()["multiLevelOptions"]:
+                if i["stockCnt"] != 0:
+                    option = str(i["optionNo"])
+                    break
         url = "https://shop-api.e-ncp.com/order-sheets"
         payload = {
             "products": [
@@ -174,15 +182,6 @@ class kasinaCart:
         driver.maximize_window()
         return driver
 
-    def popup_close(self):
-        handles = self.driver.window_handles
-        size = len(handles)
-        main_handle = self.driver.current_window_handle
-        for x in range(size):
-            if handles[x] != main_handle:
-                self.driver.switch_to.window(handles[x])
-                self.driver.close()
-        self.driver.switch_to.window(main_handle)
 
     def automatic(self, cart_url, naver_cookie, data, product_code, header):
         sys.stdout.write(f"\r네이버 계정 검증\n")
@@ -231,7 +230,7 @@ class kasinaCart:
         height, width = image.shape[:2]
         midpoint = height // 2
 
-        mask_color = (255, 255, 255)
+        mask_color = (255, 255, 255)  # Assuming white background
         upper_half_mask = np.full((midpoint, width, 3), mask_color, dtype=np.uint8)
 
         image[0:midpoint, :] = upper_half_mask
@@ -262,6 +261,114 @@ class kasinaCart:
                 x = text_data['left'][i] + text_data['width'][i] / 2
                 y = text_data['top'][i] + text_data['height'][i] / 2
         return x, y
+
+    def check_stock(self, urls, product_code, header, data):
+        if "onthespot" in urls:
+            url = "https://www.onthespot.co.kr/"
+        elif "grandstage" in urls:
+            url = "https://grandstage.a-rt.com/"
+        else:
+            url = "https://abcmart.a-rt.com/"
+        url = f"{url}product/info?prdtNo=" + product_code
+        stock = 0
+        num = 0
+        while True:
+            req = requests.get(url, headers=header)
+            for i in req.json()["productOption"]:
+                if str(i["optnName"]) == data['size']:
+                    stock = i["totalStockQty"]-i["totalOrderQty"]
+                    break
+            if num == 4:
+                num = 1
+            sys.stdout.write(f"\r재고 대기중{'.'*num}")
+            sys.stdout.flush()
+            num = num+1
+            if stock>0:
+                # print(json.dumps(req.json(), ensure_ascii=False, indent=4))
+                break
+            else:
+                time.sleep(0.2)
+
+    def draw_info(self, product_code):
+        url = f'https://static.shoeprize.com/campaign/json/kasina-{product_code}.json'
+        return requests.get(url).json()
+
+    def terms(self, data):
+        from datetime import datetime, timezone, timedelta
+        now = datetime.now()
+        kst = timezone(timedelta(hours=9))
+        now_kst = now.astimezone(kst)
+        formatted_time = now_kst.strftime('%Y-%m-%dT%H:%M:%S%z')
+        terms = {}
+        for i in data["terms"]["campaign-participate"]:
+            terms.update({i:{
+                "approve": True,
+                "approvedAt": formatted_time,
+                "unapprovedAt": ""}
+            })
+        return terms
+
+    def draw(self, data):
+        sys.stdout.write(f"\r응모 시작\n")
+        sys.stdout.flush()
+        product_code = data["product_code"]
+        product_code = self.url_setting(product_code)
+
+        sys.stdout.write(f"\rkasina Login\n")
+        sys.stdout.flush()
+        n, header = self.login(data)
+        sys.stdout.write(f"\r제품 정보 취득\n")
+        sys.stdout.flush()
+        while True:
+            try:
+                product_info = self.draw_info(product_code)
+                break
+            except:
+                time.sleep(0.3)
+
+        sys.stdout.write(f'\r{product_info["title"]} {product_info["url"]}\n')
+        sys.stdout.flush()
+
+        sys.stdout.write(f"\r응모 시작\n")
+        sys.stdout.flush()
+        tokens = requests.post("https://shop-api.kasina.co.kr/api/v1/campaign/token", headers=header)
+
+        tokenss = {
+            "jwtToken": tokens.json()["token"]
+        }
+        tokensss = requests.post(f"https://campaign-api.shoeprize.com/campaign/kasina/{product_code}/token/member", headers=header, data=json.dumps(tokenss))
+        header_campaign = {
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept-Language': 'ko-KR,ko;q=0.9',
+            'Content-Type': 'application/json',
+            'Origin': 'https://launches.kasina.co.kr',
+            'Sec-Fetch-Dest': 'cors',
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebkit/605.1.15 (KHTML, like Gecko)  Mobile/15E148 Kasina/2.0.6',
+            'Authorization': f'Bearer {tokensss.json()["token"]}'
+        }
+        draw_page = requests.get(f"https://campaign-api.shoeprize.com/campaign/kasina/{product_code}", headers=header_campaign)
+
+        option = None
+        for i in product_info["modules"][1]["form"][1]["options"]:
+            if str(i["label"]) == str(data["size"]):
+                option = i["value"]
+        if option == None:
+            i = random.choice(product_info["modules"][1]["form"][1]["options"])
+            option = i["value"]
+
+        draw_data = {
+            "channel": "APP",
+            "email": draw_page.json()["user"]["email"],
+            "name": draw_page.json()["user"]["name"],
+            "phone": draw_page.json()["user"]["phone"],
+            "rewardOptionalId": product_info["modules"][1]["form"][0]["value"],
+            "rewardOptionalOption": option,
+            "terms": self.terms(product_info)
+        }
+        requests.post(f"https://campaign-api.shoeprize.com/campaign/kasina/{product_code}", headers=header_campaign, data=json.dumps(draw_data))
+        sys.stdout.write(f"\r응모 완료\n")
+        sys.stdout.flush()
 
     def run(self, data, naver_cookie):
         sys.stdout.write(f"\r구매 시작\n")
