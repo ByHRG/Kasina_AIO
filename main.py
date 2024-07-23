@@ -10,7 +10,7 @@ import urllib.parse
 
 class KasinaAIO:
     def __init__(self):
-        sys.stdout.write(f"\rA-RT ver 0.0.4\n")
+        sys.stdout.write(f"\rA-RT ver 0.0.5\n")
         sys.stdout.flush()
         data = '''                
         kasina       
@@ -51,6 +51,10 @@ class KasinaAIO:
                     num = num+1
                     time.sleep(1)
 
+        elif data["Type"] == 3:
+            cart.kasinaCart().draw(data)
+
+
             # cart.kasinaCart().run(data, self.navercookie)
 
     def save(self, data):
@@ -77,7 +81,7 @@ class KasinaAIO:
                 except:
                     print("\n계정을 다시 확인해주세요.")
             while True:
-                session = input("원하는 작업을 입력해주세요.\n1 온라인 링크 구매:")
+                session = input("원하는 작업을 입력해주세요.\n1 온라인 링크 구매\n2 온라인 검색 구매\n3 온라인 응모:")
                 if session == "1":
                     product_code = input("URL:")
                     size = input("SIZE:")
@@ -136,5 +140,17 @@ class KasinaAIO:
                         "Pay": Pay,
                     }
                     self.job_start(data, header)
+                elif session == "3":
+                    product_code = input("URL:")
+                    size = input("SIZE:")
+
+                    data = {
+                        "Type": 3,
+                        "ID": id,
+                        "PW": pw,
+                        "product_code": product_code,
+                        "size": size
+                    }
+                    self.job_start(data, None)
 
 KasinaAIO().run()
