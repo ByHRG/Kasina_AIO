@@ -1,7 +1,7 @@
 # Kasina_AIO
 
 ## 개요
-카시나 선착순 구매 봇입니다. 카시나 AIO는 실시간 재고 추적과 자동 구매 기능을 제공합니다.
+카시나 선착순 구매 봇입니다. 카시나 AIO는 실시간 재고 추적과 자동 구매 기능, 앱전용 상품 구매, 제품 응모 기능을 제공합니다.
 
 ## 기술 스택
 - **언어**: Python
@@ -14,6 +14,7 @@
 1. 실시간 재고 추적
 2. 네이버페이 결제를 위한 Tesseract OCR 필요
 3. 네이버 계정 연동 필수 (최초 실행 시)
+4. 앱 전용 상품 구매 기능
 
 ## 설치 및 실행 방법
 1. **Tesseract 설치**: 네이버페이 결제를 위해 OCR을 사용하므로, Tesseract가 필요합니다. Tesseract를 설치하려면 [Tesseract GitHub](https://github.com/tesseract-ocr/tesseract)를 참고하세요.
