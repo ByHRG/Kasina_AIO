@@ -12,14 +12,13 @@ class KasinaAIO:
     def __init__(self):
         sys.stdout.write(f"\rA-RT ver 0.0.5\n")
         sys.stdout.flush()
-        data = '''                
+        data = """                
         kasina       
                                   AIO by Choi10                                    
-                                                                     '''
+                                                                     """
         for i in data.split("\n"):
             print(i)
             time.sleep(0.1)
-
 
         sys.stdout.write(f"\r네이버 계정 검증 시작\n")
         sys.stdout.flush()
@@ -37,36 +36,40 @@ class KasinaAIO:
             num = 0
             keyword = urllib.parse.quote(data["product_code"])
             while True:
-                req = requests.get(f"https://shop-api.e-ncp.com/products/search?categoryNos=&pageSize=100&pageNumber=1&filter.keywords={keyword}&order.by=MD_RECOMMEND&order.direction=ASC&filter.soldout=true&brandNos=&filter.saleStatus=ALL_CONDITIONS", headers=header)
+                req = requests.get(
+                    f"https://shop-api.e-ncp.com/products/search?categoryNos=&pageSize=100&pageNumber=1&filter.keywords={keyword}&order.by=MD_RECOMMEND&order.direction=ASC&filter.soldout=true&brandNos=&filter.saleStatus=ALL_CONDITIONS",
+                    headers=header,
+                )
                 if len(req.json()["items"]) != 0:
-                    sys.stdout.write(f"\r{req.json()['items'][0]['productName']} 발견\n")
+                    sys.stdout.write(
+                        f"\r{req.json()['items'][0]['productName']} 발견\n"
+                    )
                     sys.stdout.flush()
-                    data["product_code"] = f"https://www.kasina.co.kr/product-detail/{req.json()['items'][0]['productNo']}"
+                    data["product_code"] = (
+                        f"https://www.kasina.co.kr/product-detail/{req.json()['items'][0]['productNo']}"
+                    )
                     break
                 else:
                     if num == 4:
                         num = 1
                     sys.stdout.write(f"\r재고 대기중{'.'*num}")
                     sys.stdout.flush()
-                    num = num+1
+                    num = num + 1
                     time.sleep(1)
 
         elif data["Type"] == 3:
             cart.kasinaCart().draw(data)
 
-
             # cart.kasinaCart().run(data, self.navercookie)
 
     def save(self, data):
-        pickle.dump(data, open(f'_internal/dclp.dll', 'wb'), pickle.HIGHEST_PROTOCOL)
+        pickle.dump(data, open(f"_internal/dclp.dll", "wb"), pickle.HIGHEST_PROTOCOL)
 
     def load(self):
-        return pickle.load(open(f'_internal/dclp.dll', 'rb'))
-
+        return pickle.load(open(f"_internal/dclp.dll", "rb"))
 
     def mypage(self, data):
         return cart.kasinaCart().login(data)
-
 
     def run(self):
         while True:
@@ -81,20 +84,26 @@ class KasinaAIO:
                 except:
                     print("\n계정을 다시 확인해주세요.")
             while True:
-                session = input("원하는 작업을 입력해주세요.\n1 온라인 링크 구매\n2 온라인 검색 구매\n3 온라인 응모:")
+                session = input(
+                    "원하는 작업을 입력해주세요.\n1 온라인 링크 구매\n2 온라인 검색 구매\n3 온라인 응모:"
+                )
                 if session == "1":
                     product_code = input("URL:")
                     size = input("SIZE:")
                     Pay = input("NaverPay Password:")
                     while True:
-                        timer = input("실행 예약(ex:20240131 095800\n.입력시 바로 시작):")
+                        timer = input(
+                            "실행 예약(ex:20240131 095800\n.입력시 바로 시작):"
+                        )
                         if timer == ".":
                             break
 
                         try:
-                            inputtime = datetime.strptime(timer, '%Y%m%d %H%M%S')
+                            inputtime = datetime.strptime(timer, "%Y%m%d %H%M%S")
                             while True:
-                                sys.stdout.write(f"\r{datetime.now().strftime('%Y%m%d %H%M%S')}")
+                                sys.stdout.write(
+                                    f"\r{datetime.now().strftime('%Y%m%d %H%M%S')}"
+                                )
                                 sys.stdout.flush()
                                 if datetime.now() >= inputtime:
                                     break
@@ -116,14 +125,18 @@ class KasinaAIO:
                     size = input("SIZE:")
                     Pay = input("NaverPay Password:")
                     while True:
-                        timer = input("실행 예약(ex:20240131 095800\n.입력시 바로 시작):")
+                        timer = input(
+                            "실행 예약(ex:20240131 095800\n.입력시 바로 시작):"
+                        )
                         if timer == ".":
                             break
 
                         try:
-                            inputtime = datetime.strptime(timer, '%Y%m%d %H%M%S')
+                            inputtime = datetime.strptime(timer, "%Y%m%d %H%M%S")
                             while True:
-                                sys.stdout.write(f"\r{datetime.now().strftime('%Y%m%d %H%M%S')}")
+                                sys.stdout.write(
+                                    f"\r{datetime.now().strftime('%Y%m%d %H%M%S')}"
+                                )
                                 sys.stdout.flush()
                                 if datetime.now() >= inputtime:
                                     break
@@ -149,8 +162,9 @@ class KasinaAIO:
                         "ID": id,
                         "PW": pw,
                         "product_code": product_code,
-                        "size": size
+                        "size": size,
                     }
                     self.job_start(data, None)
+
 
 KasinaAIO().run()
