@@ -27,7 +27,7 @@ class kasinaCart:
             'Referer': 'https://www.kasina.co.kr',
             'Sec-Fetch-Dest': 'empty',
             'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebkit/605.1.15 (KHTML, like Gecko)  Mobile/15E148 Kasina/2.0.6',
-            'Device-uuid': 'c142e543-75e5-4442-bc68-abfbb49af354',
+            'Device-uuid': None,
             'sales-channel-id': '400041'
         }
         data = {
@@ -36,7 +36,7 @@ class kasinaCart:
         }
         authenticate = httpx.post("카시나의 API/v1/authenticate", headers=header, json=data)
         httpx.options('https://shop-api.e-ncp.com/oauth/openid', headers=header)
-        header["clientid"] = "183SVEgDg5nHbILW//3jvg=="
+        header["clientid"] = None
         header["Platform"] = "IOS"
         header["Version"] = "1.0"
 
